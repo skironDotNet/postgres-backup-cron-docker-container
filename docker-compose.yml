@@ -1,0 +1,22 @@
+services:
+  postgres-backup:
+    build: .
+    image: postgress-backup-cron
+    restart: unless-stopped
+    environment:
+      SCHEDULE_EXPR: "0 2 * * *"
+      TZ: America/Chicago
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: ${PG_BACKUP_PASSWORD:?Set PG_BACKUP_PASSWORD in .env}
+      BACKUP_DIR: /backups
+    volumes:
+      - /srv/backups/postgresql:/backups
+    networks:
+      - postgres-network
+
+networks:
+  postgres-network:
+    external: true
