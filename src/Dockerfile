@@ -1,7 +1,12 @@
 # Use a client version at least as new as the PostgreSQL server major version.
-FROM postgres:18-alpine
+FROM alpine:3.23
 
-RUN apk add --no-cache tini tzdata
+RUN apk add --no-cache postgresql18-client tini tzdata \
+    && psql --version \
+    && pg_dump --version \
+    && pg_dumpall --version \
+    && pg_restore --version \
+    && ! command -v postgres
 
 COPY job.sh /job.sh
 RUN chmod 0755 /job.sh

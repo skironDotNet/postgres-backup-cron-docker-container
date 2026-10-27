@@ -2,7 +2,7 @@
 
 1. Adjust `PGHOST`, `PGUSER`, network name and backup host path in `docker-compose.yml`.
 2. Put `BACKUP_USER_PASSWORD=your-password` in a local `.env` (never commit it).
-3. Verify the image's PostgreSQL client major version is at least the server major version (change `FROM postgres:18-alpine` as appropriate).
+3. Verify the image's PostgreSQL client major version is at least the server major version. The Dockerfile uses `alpine:3.23` with `postgresql18-client`; adjust the client package and Alpine release together if a different major version is needed.
 4. `docker compose up -d --build`
 5. Test immediately: `docker compose exec postgres-backup /job.sh`
 6. Inspect results: `docker compose logs postgres-backup` and `ls -la /srv/backups/postgresql`.
@@ -11,6 +11,20 @@
 The backup script discovers all non-template connectable databases, makes one compressed custom-format dump per database, and dumps PostgreSQL global objects (roles / tablespaces). The script uses static `db__<sanitized-database-name>.dump` filenames, stages dumps as `db__<sanitized-database-name>.dump.tmp`, and publishes them only after all dumps succeed. It retains the latest successful dumps. Global objects are staged as `globals.sql.tmp` and published as `globals.sql`.
 
 ## Configuration
+
+The image installs only PostgreSQL 18 client tools and their dependencies,
+plus `tini` and timezone data. Alpine's built-in BusyBox supplies the shell and
+cron daemon. No PostgreSQL server package is installed. The build checks that
+`psql`, `pg_dump`, `pg_dumpall`, and `pg_restore` run and that the `postgres`
+server command is absent.
+
+Rebuild, inspect the image size in bytes, and recreate the container:
+
+```sh
+./build.sh
+docker image inspect postgres-backup-cron --format '{{.Size}}'
+docker compose up -d --force-recreate
+```
 
 | Variable | Script default | Compose setting |
 | --- | --- | --- |
