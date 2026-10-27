@@ -29,3 +29,16 @@ exit 0
 ```
 
 The script removes `.backup-failed` only after a fully successful backup. A container crash can leave a stale lock or marker, requiring manual inspection before the next run.
+
+## backup user
+
+For **PostgreSQL v14–18**, the simplest approach is to create a dedicated backup user and grant it the built-in `pg_read_all_data` role.
+
+```
+CREATE USER backup_job WITH PASSWORD 'your_strong_password'
+    NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+GRANT pg_read_all_data TO backup_job;
+```                                
+
+This allows the user to read all tables, views, and sequences across databases without granting write or administrative privileges.
