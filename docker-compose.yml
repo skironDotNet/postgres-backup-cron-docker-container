@@ -4,19 +4,24 @@ services:
     container_name: postgres-backup
     restart: unless-stopped
     environment:
-      SCHEDULE_EXPR: "0 2 * * *"
+      SCHEDULE_EXPR: "0 2 * * *" # adjust the cron job schedule here
       TZ: America/Chicago
-      PGHOST: postgres
+      PGHOST: pgsql # assuming you run pgsql as container, use your container name as hostname 
       PGPORT: "5432"
-      PGUSER: postgres
-      PGDATABASE: postgres
+      PGUSER: backup_job # create such user, or change it here
+      PGDATABASE: postgres # default DB just because, leave as is
       PGPASSWORD: ${PG_BACKUP_PASSWORD:?Set PG_BACKUP_PASSWORD in .env}
-      BACKUP_DIR: /backups
+      BACKUP_DIR: /backups # location in the container, leave as is
     volumes:
-      - /srv/backups/postgresql:/backups
+      - /srv/backups/postgresql:/backups # adjust your host dir location
     networks:
-      - postgres-network
+      - postgres-network # just an assumption. Use same netwrok where you host pgsql server container
 
 networks:
-  postgres-network:
+  postgres-network: # just an assumption. Use same netwrok where you host pgsql server container
     external: true
+
+# About network. May be a good idea to take this postgres-backup service and 
+# add it to your pg server docker-compose.yml, this way can start the server 
+# and the backup cron from same command, they will both be automatically on the same network
+# so you can keep the `netwrok` sections

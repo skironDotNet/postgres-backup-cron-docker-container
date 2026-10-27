@@ -7,9 +7,9 @@ COPY job.sh /job.sh
 RUN chmod 0755 /job.sh
 
 ENV SCHEDULE_EXPR="0 2 * * *" \
-    PGHOST=postgres \
+    PGHOST=pgsql \
     PGPORT=5432 \
-    PGUSER=postgres \
+    PGUSER=backup_job \
     PGDATABASE=postgres \
     BACKUP_DIR=/backups \
     TZ=America/Chicago
