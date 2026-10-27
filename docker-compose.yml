@@ -10,7 +10,7 @@ services:
       PGPORT: "5432"
       PGUSER: backup_job # create such user, or change it here
       PGDATABASE: postgres # default DB just because, leave as is
-      PGPASSWORD: ${PG_BACKUP_PASSWORD:?Set PG_BACKUP_PASSWORD in .env}
+      PGPASSWORD: ${BACKUP_USER_PASSWORD:?Set BACKUP_USER_PASSWORD in .env}
       BACKUP_DIR: /backups # location in the container, leave as is
     volumes:
       - /srv/backups/postgresql:/backups # adjust your host dir location

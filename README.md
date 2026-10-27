@@ -1,14 +1,54 @@
 # PostgreSQL backup cron container
 
 1. Adjust `PGHOST`, `PGUSER`, network name and backup host path in `docker-compose.yml`.
-2. Put `PG_BACKUP_PASSWORD=your-password` in a local `.env` (never commit it).
+2. Put `BACKUP_USER_PASSWORD=your-password` in a local `.env` (never commit it).
 3. Verify the image's PostgreSQL client major version is at least the server major version (change `FROM postgres:18-alpine` as appropriate).
 4. `docker compose up -d --build`
 5. Test immediately: `docker compose exec postgres-backup /job.sh`
 6. Inspect results: `docker compose logs postgres-backup` and `ls -la /srv/backups/postgresql`.
 7. Copy `.kopiaignore` to `/srv/backups/postgresql/.kopiaignore`, and make sure Kopia recognizes it as an ignore file at that snapshot root.
 
-The backup script discovers all non-template connectable databases, makes one compressed custom-format dump per database, and dumps PostgreSQL global objects (roles / tablespaces). The script uses static .dump filenames, stages dumps as `.dump.tmp`, and publishes them only after all dumps succeed. It retains the latest successful dumps.
+The backup script discovers all non-template connectable databases, makes one compressed custom-format dump per database, and dumps PostgreSQL global objects (roles / tablespaces). The script uses static `db__<sanitized-database-name>.dump` filenames, stages dumps as `db__<sanitized-database-name>.dump.tmp`, and publishes them only after all dumps succeed. It retains the latest successful dumps. Global objects are staged as `globals.sql.tmp` and published as `globals.sql`.
+
+## Configuration
+
+| Variable | Script default | Compose setting |
+| --- | --- | --- |
+| `PGHOST` | `postgres` | `pgsql` |
+| `PGPORT` | `5432` | `5432` |
+| `PGUSER` | `postgres` | `backup_job` |
+| `PGDATABASE` | `postgres` | `postgres` |
+| `BACKUP_DIR` | `/backups` | `/backups`, mounted from `/srv/backups/postgresql` |
+| `PGPASSWORD` | Unset; PostgreSQL client password environment variable | From `BACKUP_USER_PASSWORD` in `.env` |
+
+`PGDATABASE` selects the initial connection database for discovery; each dump
+targets its discovered database name. `BACKUP_USER_PASSWORD` is a Compose input,
+not a variable read by `job.sh`. Compose sets `SCHEDULE_EXPR` to `0 2 * * *`
+and `TZ` to `America/Chicago` for daily backups at 02:00.
+
+## Dump filenames and restore
+
+Database names are sanitized by replacing characters other than letters, numbers,
+`_`, `.`, and `-` with `_`. For example, `sales europe` produces
+`db__sales_europe.dump` inside `BACKUP_DIR`.
+
+Existing files using the old hash suffix are not renamed or deleted automatically.
+After verifying a successful backup with the new names, remove obsolete hashed
+files from the backup directory if they are no longer needed.
+
+Restore global objects first when needed, then restore the database into an
+existing empty database. Use a suitably privileged restore account and adjust
+paths and connection settings for your environment:
+
+```sh
+psql --host=pgsql --username=postgres --dbname=postgres --set=ON_ERROR_STOP=1 --file=/srv/backups/postgresql/globals.sql
+createdb --host=pgsql --username=postgres 'sales europe'
+pg_restore --host=pgsql --username=postgres --dbname='sales europe' --exit-on-error /srv/backups/postgresql/db__sales_europe.dump
+```
+
+The filename is sanitized; the restore target uses the original database name.
+
+## Kopia
 
 Kopia snapshots must run after dumps complete. Configure retention separately; The PostgreSQL superuser in this example is needed for comprehensive backup of global objects; protect its credentials and backup files.
 
