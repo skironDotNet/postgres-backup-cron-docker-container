@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t postgress-backup-cron ./src
+docker build -t postgres-backup-cron ./src

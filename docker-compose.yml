@@ -1,7 +1,7 @@
 services:
   postgres-backup:
-    build: .
-    image: postgress-backup-cron
+    image: postgres-backup-cron
+    container_name: postgres-backup
     restart: unless-stopped
     environment:
       SCHEDULE_EXPR: "0 2 * * *"
