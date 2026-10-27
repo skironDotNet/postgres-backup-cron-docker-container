@@ -1,9 +1,9 @@
 #!/bin/sh
 set -u
 
-: "${PGHOST:=postgres}"
+: "${PGHOST:=pgsql}"
 : "${PGPORT:=5432}"
-: "${PGUSER:=postgres}"
+: "${PGUSER:=backup_job}"
 : "${PGDATABASE:=postgres}"
 : "${BACKUP_DIR:=/backups}"
 

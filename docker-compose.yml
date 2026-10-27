@@ -24,4 +24,4 @@ networks:
 # About network. May be a good idea to take this postgres-backup service and 
 # add it to your pg server docker-compose.yml, this way can start the server 
 # and the backup cron from same command, they will both be automatically on the same network
-# so you can keep the `netwrok` sections
+# so you can skip the `netwrok` sections
