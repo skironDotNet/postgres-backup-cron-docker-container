@@ -1,7 +1,7 @@
 # PostgreSQL backup cron container
 
 1. Adjust `PGHOST`, `PGUSER`, network name and backup host path in `docker-compose.yml`.
-2. Put `BACKUP_USER_PASSWORD=your-password` in a local `.env` (never commit it).
+2. Create `backup.env` alongside `docker-compose.yml` with `PGPASSWORD=your-password` (never commit it). Compose loads this file into the container environment.
 3. Verify the image's PostgreSQL client major version is at least the server major version. The Dockerfile uses `alpine:3.23` with `postgresql18-client`; adjust the client package and Alpine release together if a different major version is needed.
 4. `docker compose up -d --build`
 5. Test immediately: `docker compose exec postgres-backup /job.sh`
@@ -33,11 +33,10 @@ docker compose up -d --force-recreate
 | `PGUSER` | `postgres` | `backup_job` |
 | `PGDATABASE` | `postgres` | `postgres` |
 | `BACKUP_DIR` | `/backups` | `/backups`, mounted from `/srv/backups/postgresql` |
-| `PGPASSWORD` | Unset; PostgreSQL client password environment variable | From `BACKUP_USER_PASSWORD` in `.env` |
+| `PGPASSWORD` | Unset; PostgreSQL client password environment variable | From `backup.env` |
 
 `PGDATABASE` selects the initial connection database for discovery; each dump
-targets its discovered database name. `BACKUP_USER_PASSWORD` is a Compose input,
-not a variable read by `job.sh`. Compose sets `SCHEDULE_EXPR` to `0 2 * * *`
+targets its discovered database name. Compose sets `SCHEDULE_EXPR` to `0 2 * * *`
 and `TZ` to `America/Chicago` for daily backups at 02:00.
 
 ## Dump filenames and restore

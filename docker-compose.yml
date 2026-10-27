@@ -3,14 +3,15 @@ services:
     image: postgres-backup-cron
     container_name: postgres-backup
     restart: unless-stopped
+    env_file:
+      - backup.env
     environment:
       SCHEDULE_EXPR: "0 2 * * *" # adjust the cron job schedule here
       TZ: America/Chicago
       PGHOST: pgsql # assuming you run pgsql as container, use your container name as hostname 
       PGPORT: "5432"
-      PGUSER: backup_job # create such user, or change it here
+      PGUSER: backup_job # create such user, or change it here, the PGPASSWORD goes to backup.env
       PGDATABASE: postgres # default DB just because, leave as is
-      PGPASSWORD: ${BACKUP_USER_PASSWORD:?Set BACKUP_USER_PASSWORD in .env}
       BACKUP_DIR: /backups # location in the container, leave as is
     volumes:
       - /srv/backups/postgresql:/backups # adjust your host dir location
