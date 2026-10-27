@@ -59,8 +59,7 @@ fi
 while IFS= read -r db; do
     [ -n "$db" ] || continue
     label=$(printf '%s' "$db" | sed 's/[^[:alnum:]_.-]/_/g')
-    hash=$(printf '%s' "$db" | sha256sum | cut -c1-12)
-    temp="$BACKUP_DIR/${label}-${hash}.dump.tmp"
+    temp="$BACKUP_DIR/db__${label}.dump.tmp"
 
     echo "Backing up database: $db"
     if ! pg_dump -w -Fc --dbname="$db" -f "$temp"; then
@@ -81,8 +80,7 @@ fi
 while IFS= read -r db; do
     [ -n "$db" ] || continue
     label=$(printf '%s' "$db" | sed 's/[^[:alnum:]_.-]/_/g')
-    hash=$(printf '%s' "$db" | sha256sum | cut -c1-12)
-    file="$BACKUP_DIR/${label}-${hash}.dump"
+    file="$BACKUP_DIR/db__${label}.dump"
     mv -f "$file.tmp" "$file" || exit 1
     echo "Completed: $file"
 done <<EOF_DATABASES
